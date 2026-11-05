@@ -1,3 +1,15 @@
 .loading {
   display:none
 }
+
+
+.bg-yellow-50 { background-color: #fefce8; }
+.bg-slate-50  { background-color: #f8fafc; }
+.bg-rose-50   { background-color: #fff1f2; }
+.bg-cyan-50   { background-color: #ecfeff; }
+.bg-teal-50   { background-color: #f0fdfa; }
+.bg-green-50  { background-color: #f0fdf4; }
+
+.bg-slate-gradient {
+  background-image: linear-gradient(to bottom right, #64748b, #52525b);
+}
