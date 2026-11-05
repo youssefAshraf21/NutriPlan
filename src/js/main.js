@@ -19,6 +19,9 @@ const nutritionContainer = document.getElementById("nutrition-facts-container");
 const heroServings = document.getElementById("hero-servings");
 const ingredientsCount = document.getElementById("ingredients-count");  
 
+
+const searchMeal = document.getElementById("search-input");
+
 let categoryArr = [];
 let mealsArr = [];
 const categoriesColors = [
@@ -367,4 +370,26 @@ function displayNutrition(data) {
 
     box += `</div>`;
     nutritionContainer.innerHTML = box;
+}
+
+
+// handel the search 
+
+searchMeal.addEventListener("input", (e) => {
+    searchMeals(e.target.value);
+});
+
+async function searchMeals(input) {
+    const response = await fetch(`${BASE_URL}/meals/search?q=${input}`,)
+    const data = await response.json();
+    mealsArr = data.results;
+    displayMeals(mealsArr);
+}
+
+
+// handle the category filter
+
+
+function filterByCategory() {
+    
 }
