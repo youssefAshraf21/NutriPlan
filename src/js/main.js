@@ -22,7 +22,10 @@ const ingredientsCount = document.getElementById("ingredients-count");
 
 const searchMeal = document.getElementById("search-input");
 
+const areaContainer = document.getElementById("areaContainer");
+
 let categoryArr = [];
+let areaArr = [];
 let mealsArr = [];
 const categoriesColors = [
     {
@@ -165,6 +168,40 @@ function displayCategories(categories, categoryColors) {
     categoriesContainer.innerHTML = box;
 }
 
+// get the areas and display them
+
+async function getAreas() {
+    const response = await fetch(`${BASE_URL}/meals/areas`)
+    const data = await response.json();
+
+    areaArr = data.results;
+    console.log(areaArr);
+    displayArea(areaArr);
+    
+}
+
+getAreas();
+
+function displayArea(area) {
+    let box = `<button
+              class="px-4 py-2 bg-emerald-600 text-white rounded-full font-medium text-sm whitespace-nowrap hover:bg-emerald-700 transition-all"
+            >
+              All Recipes
+            </button>`;
+    for(let i = 0; i <10; i++) {
+        box += `
+        
+        <button
+              class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full font-medium text-sm whitespace-nowrap hover:bg-gray-200 transition-all"
+            >
+              ${area[i].name}
+            </button>`
+    }
+
+    areaContainer.innerHTML = box;
+}
+
+
 // get the cards from api 
 
 async function getMeals() {
@@ -176,15 +213,27 @@ async function getMeals() {
     });
     const data = await response.json();
     mealsArr = data.results;
-    console.log(mealsArr);
     displayMeals(mealsArr);
 }
+
+
 
 
 
 // display the meals cards
 
 function displayMeals(meals) {
+    if (meals.length === 0){
+        mealsContainer.innerHTML = `
+        <div class="col-span-4 flex flex-col items-center justify-center py-12 text-center">
+            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <i class="fa-solid fa-search text-gray-400 text-2xl"></i>
+            </div>
+            <p class="text-gray-500 text-lg">No recipes found</p>
+            <p class="text-gray-400 text-sm mt-2">Try searching for something else</p>
+        </div>`;
+        return;
+    } 
     let box = "";
     for(let i = 0; i < meals.length; i++) {
         box += `<div
@@ -325,7 +374,7 @@ async function getNutrition(meal) {
     });
 
     const data = await response.json();
-    console.log(data);
+    (data);
     displayNutrition(data.data);
 }
 
@@ -390,6 +439,19 @@ async function searchMeals(input) {
 // handle the category filter
 
 
-function filterByCategory() {
-    
+
+categoriesContainer.addEventListener("click", (e) => {
+    const category = e.target.closest(".category-card");
+    const selectedCategory = category.dataset.category;
+    filterByCategory(selectedCategory)
+})
+
+async function filterByCategory(categoryName){
+    const response = await fetch(`${BASE_URL}/meals/filter?category=${categoryName}&page=1&limit=25`)
+    const data = await response.json();
+    mealsArr = data.results;
+    displayMeals(mealsArr);
 }
+
+
+
