@@ -330,6 +330,7 @@
           <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
             <div class="relative h-80 md:h-96">
               <img
+                id="mealImg"
                 src="https://www.themealdb.com/images/media/meals/ustsqw1468250014.jpg"
                 alt="Teriyaki Chicken Casserole"
                 class="w-full h-full object-cover"
@@ -340,10 +341,12 @@
               <div class="absolute bottom-0 left-0 right-0 p-8">
                 <div class="flex items-center gap-3 mb-3">
                   <span
+                    id="mealCategoryDetail"
                     class="px-3 py-1 bg-emerald-500 text-white text-sm font-semibold rounded-full"
                     >Chicken</span
                   >
                   <span
+                    id="mealAreaDetail"
                     class="px-3 py-1 bg-blue-500 text-white text-sm font-semibold rounded-full"
                     >Japanese</span
                   >
@@ -352,7 +355,9 @@
                     >Casserole</span
                   >
                 </div>
-                <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
+                <h1
+                id="mealTitleDetail"
+                class="text-3xl md:text-4xl font-bold text-white mb-2">
                   Teriyaki Chicken Casserole
                 </h1>
                 <div class="flex items-center gap-6 text-white/90">
@@ -386,7 +391,7 @@
           </div>
 
           <!-- Main Content Grid -->
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8" id="ingredients-container">
             <!-- Left Column - Ingredients & Instructions -->
             <div class="lg:col-span-2 space-y-8">
               <!-- Ingredients -->
@@ -396,11 +401,15 @@
                 >
                   <i class="fa-solid fa-list-check text-emerald-600"></i>
                   Ingredients
-                  <span class="text-sm font-normal text-gray-500 ml-auto"
+                  <span 
+                  id="ingredients-count"
+                  class="text-sm font-normal text-gray-500 ml-auto"
                     >9 items</span
                   >
                 </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3"
+                id="ingredients-list"
+                >
                   <div
                     class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-emerald-50 transition-colors"
                   >
@@ -519,14 +528,16 @@
               </div>
 
               <!-- Instructions -->
-              <div class="bg-white rounded-2xl shadow-lg p-6">
+              <div 
+              id="instructions-container"
+              class="bg-white rounded-2xl shadow-lg p-6">
                 <h2
                   class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2"
                 >
                   <i class="fa-solid fa-shoe-prints text-emerald-600"></i>
                   Instructions
                 </h2>
-                <div class="space-y-4">
+                <div id="instructions-list" class="space-y-4">
                   <div
                     class="flex gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors"
                   >
@@ -617,10 +628,11 @@
                   class="relative aspect-video rounded-xl overflow-hidden bg-gray-100"
                 >
                   <iframe
+                    id="meal-video"
                     src="https://www.youtube.com/embed/4aZr5hZXP_s"
                     class="absolute inset-0 w-full h-full"
                     frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowfullscreen
                   >
                   </iframe>

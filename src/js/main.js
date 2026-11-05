@@ -5,6 +5,20 @@ const categoriesContainer = document.getElementById("categories-grid");
 const mealsContainer = document.getElementById("recipes-grid");
 
 
+const mealImg = document.getElementById("mealImg");
+const mealCategoryDetail = document.getElementById("mealCategoryDetail");
+const mealAreaDetail = document.getElementById("mealAreaDetail");
+const mealTitleDetail = document.getElementById("mealTitleDetail");
+const mealVideo = document.getElementById("meal-video");
+const heroCalories = document.getElementById("hero-calories");
+
+
+const ingredientsList = document.getElementById("ingredients-list");
+const instructionsList = document.getElementById("instructions-list");
+const nutritionContainer = document.getElementById("nutrition-facts-container");
+const heroServings = document.getElementById("hero-servings");
+const ingredientsCount = document.getElementById("ingredients-count");  
+
 let categoryArr = [];
 let mealsArr = [];
 const categoriesColors = [
@@ -85,11 +99,11 @@ const categoriesColors = [
 
 // handel pages display
 
-function setupNavigation() {
-    const mealsPage = ["search-filters-section", "meal-categories-section", "all-recipes-section"];
-    const detailsPage = ["meal-details"];
-    const productsPage = ["products-section"];
-    const foodlogPage = ["foodlog-section"];
+// handel pages display
+const mealsPage = ["search-filters-section", "meal-categories-section", "all-recipes-section"];
+const detailsPage = ["meal-details"];
+const productsPage = ["products-section"];
+const foodlogPage = ["foodlog-section"];
 
 function showPage(page) {
     [...mealsPage, ...detailsPage, ...productsPage, ...foodlogPage].forEach((id) => {
@@ -101,13 +115,14 @@ function showPage(page) {
     });
 }
 
-const links = document.querySelectorAll(".nav-link");
+function setupNavigation() {
+    const links = document.querySelectorAll(".nav-link");
 
-links[0].addEventListener("click", () => showPage(mealsPage));
-links[1].addEventListener("click", () => showPage(productsPage));
-links[2].addEventListener("click", () => showPage(foodlogPage));
-showPage(mealsPage);
+    links[0].addEventListener("click", () => showPage(mealsPage));
+    links[1].addEventListener("click", () => showPage(productsPage));
+    links[2].addEventListener("click", () => showPage(foodlogPage));
 
+    showPage(mealsPage);
 }
 
 setupNavigation();
@@ -218,3 +233,138 @@ function displayMeals(meals) {
     mealsContainer.innerHTML = box;
 }
 getMeals() 
+
+
+// click on a meal card
+mealsContainer.addEventListener("click", (e) => {
+    const card = e.target.closest(".recipe-card");
+    if (!card) return;
+
+    getMealDetails(card.dataset.mealId);
+});
+
+async function getMealDetails(id) {
+    showPage(detailsPage);
+    window.scrollTo(0, 0);
+
+    const response = await fetch(`${BASE_URL}/meals/${id}`);
+    const data = await response.json();
+    const meal = data.result;         
+
+    displayMealDetails(meal);
+    getNutrition(meal);                
+}
+
+// back button
+document.getElementById("back-to-meals-btn").addEventListener("click", () => {
+    showPage(mealsPage);
+});
+
+
+
+// handle the details page
+function displayMealDetails(meal) {
+    mealImg.src = meal.thumbnail;
+    mealImg.alt = meal.name;
+    mealCategoryDetail.textContent = meal.category;
+    mealAreaDetail.textContent = meal.area;
+    mealTitleDetail.textContent = meal.name;
+
+    ingredientsCount.textContent = `${meal.ingredients.length} items`;
+    let ingredientsBox = "";
+    for (let i = 0; i < meal.ingredients.length; i++) {
+        ingredientsBox += `
+        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-emerald-50 transition-colors">
+            <input type="checkbox" class="ingredient-checkbox w-5 h-5 text-emerald-600 rounded border-gray-300" />
+            <span class="text-gray-700">
+                <span class="font-medium text-gray-900">${meal.ingredients[i].measure}</span>
+                ${meal.ingredients[i].ingredient}
+            </span>
+        </div>`;
+    }
+    ingredientsList.innerHTML = ingredientsBox;
+
+    let stepsBox = "";
+    for (let i = 0; i < meal.instructions.length; i++) {
+        stepsBox += `
+        <div class="flex gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors">
+            <div class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0">
+                ${i + 1}
+            </div>
+            <p class="text-gray-700 leading-relaxed pt-2">${meal.instructions[i]}</p>
+        </div>`;
+    }
+    instructionsList.innerHTML = stepsBox;
+
+    mealVideo.src = meal.youtube
+}
+
+
+
+async function getNutrition(meal) {
+    nutritionContainer.innerHTML = `<p class="text-gray-500">Loading nutrition...</p>`;
+
+    const ingredientsText = [];
+    for (let i = 0; i < meal.ingredients.length; i++) {
+        ingredientsText.push(`${meal.ingredients[i].measure} ${meal.ingredients[i].ingredient}`);
+    }
+
+    const response = await fetch(`${BASE_URL}/nutrition/analyze`, {   
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "x-api-key": `${API_KEY}`
+        },
+        body: JSON.stringify({
+            recipeName: meal.name,
+            ingredients: ingredientsText
+        })
+    });
+
+    const data = await response.json();
+    console.log(data);
+    displayNutrition(data.data);
+}
+
+
+function displayNutrition(data) {
+    const dataPerServing = data.perServing;
+
+    heroServings.textContent = `${data.servings} servings`;
+    heroCalories.textContent = `${dataPerServing.calories} cal/serving`;
+
+    const rows = [
+        { name: "Protein", value: dataPerServing.protein, target: 50,  color: "bg-emerald-500" },
+        { name: "Carbs",   value: dataPerServing.carbs,   target: 250, color: "bg-blue-500" },
+        { name: "Fat",     value: dataPerServing.fat,     target: 65,  color: "bg-purple-500" },
+        { name: "Fiber",   value: dataPerServing.fiber,   target: 28,  color: "bg-orange-500" },
+        { name: "Sugar",   value: dataPerServing.sugar,   target: 50,  color: "bg-pink-500" }
+    ];
+
+    let box = `
+    <p class="text-sm text-gray-500 mb-4">Per serving</p>
+    <div class="text-center py-4 mb-4 bg-linear-to-br from-emerald-50 to-teal-50 rounded-xl">
+        <p class="text-sm text-gray-600">Calories per serving</p>
+        <p class="text-4xl font-bold text-emerald-600">${dataPerServing.calories}</p>
+        <p class="text-xs text-gray-500 mt-1">Total: ${data.totals.calories} cal</p>
+    </div>
+    <div class="space-y-4">`;
+
+    for (let i = 0; i < rows.length; i++) {
+        const percent = Math.min((rows[i].value / rows[i].target) * 100, 100);
+        box += `
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-3 h-3 rounded-full ${rows[i].color}"></div>
+                <span class="text-gray-700">${rows[i].name}</span>
+            </div>
+            <span class="font-bold text-gray-900">${rows[i].value}g</span>
+        </div>
+        <div class="w-full bg-gray-100 rounded-full h-2">
+            <div class="${rows[i].color} h-2 rounded-full" style="width: ${percent}%"></div>
+        </div>`;
+    }
+
+    box += `</div>`;
+    nutritionContainer.innerHTML = box;
+}
