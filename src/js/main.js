@@ -21,8 +21,11 @@ const ingredientsCount = document.getElementById("ingredients-count");
 
 
 const searchMeal = document.getElementById("search-input");
-
 const areaContainer = document.getElementById("areaContainer");
+
+const mealsLink = document.getElementById("mealsLink");
+const productScannerLink = document.getElementById("productScannerLink");
+const foodLogLink = document.getElementById("foodLogLink");
 
 let categoryArr = [];
 let areaArr = [];
@@ -124,11 +127,31 @@ function showPage(page) {
 function setupNavigation() {
     const links = document.querySelectorAll(".nav-link");
 
-    links[0].addEventListener("click", () => showPage(mealsPage));
-    links[1].addEventListener("click", () => showPage(productsPage));
-    links[2].addEventListener("click", () => showPage(foodlogPage));
+    links[0].addEventListener("click", () => {
+        showPage(mealsPage)
+        activeLink(0);
+    });
+    links[1].addEventListener("click", () => {
+        showPage(productsPage)
+        activeLink(1);
+    });
+    links[2].addEventListener("click", () => {
+        showPage(foodlogPage)
+        activeLink(2);
+    });
 
     showPage(mealsPage);
+}
+
+// handle the active link color
+function activeLink(index) {
+    const links = document.querySelectorAll(".nav-link");
+    for(let i = 0; i < links.length; i++) {
+        links[i].classList.remove("bg-emerald-50", "text-emerald-700");
+        links[i].classList.add("text-gray-600");
+    }
+    links[index].classList.remove("text-gray-600");
+    links[index].classList.add("bg-emerald-50", "text-emerald-700");
 }
 
 setupNavigation();
