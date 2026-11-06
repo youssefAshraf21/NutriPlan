@@ -38,8 +38,23 @@ const modalProtein = document.getElementById("modal-protein");
 const modalCarbs = document.getElementById("modal-carbs");
 const modalFat = document.getElementById("modal-fat");
 
-let currentMeal = null;        // the meal that is open now
-let currentNutrition = null;   // its nutrition per serving
+const confirmLogMeal = document.getElementById("confirm-log-meal")
+const loggedItemsList = document.getElementById("logged-items-list");
+const loggedItemsCount = document.getElementById("logged-items-count");
+const foodlogDate = document.getElementById("foodlog-date");
+const clearFoodlog = document.getElementById("clear-foodlog");
+
+const dailyGoal = { calories: 2000, protein: 50, carbs: 250, fat: 65 };
+
+const weeklyChart = document.getElementById("weekly-chart");
+const todayProgress = document.getElementById("today-progress");
+const weeklyAverageEl = document.getElementById("weekly-average");
+const weeklyTotalItemsEl = document.getElementById("weekly-total-items");
+const daysOnGoalEl = document.getElementById("days-on-goal");
+
+
+let currentMeal = null;        
+let currentNutrition = null;   
 let categoryArr = [];
 let areaArr = [];
 let mealsArr = [];
@@ -119,6 +134,20 @@ const categoriesColors = [
 ]
 
 
+// handle the getting and saving the food log from local storage
+function getFoodLog() {
+    return JSON.parse(localStorage.getItem("foodLog")) || [];
+}
+
+function saveFoodLog(list) {
+    localStorage.setItem("foodLog", JSON.stringify(list));
+}
+
+
+foodlogDate.textContent = new Date().toLocaleDateString("en-US", {
+    weekday: "long", month: "short", day: "numeric"
+});
+displayMealInLog();
 // handel pages display
 
 // handel pages display
@@ -498,16 +527,18 @@ async function filterByCategory(categoryName){
 
 
 // log btn  click
-    logMealBtn.addEventListener("click",() => {
-        logMealModal.classList.remove("hidden");
-        
-        
-    })
+    logMealBtn.addEventListener("click", () => {
 
-    cancelLogMealBtn.addEventListener("click",() => {
-        logMealModal.classList.add("hidden");
-    })
+    if (!currentMeal || !currentNutrition) return;
 
+    servingsInput.value = 1;
+    fillModal();
+    logMealModal.classList.remove("hidden");
+});
+
+cancelLogMealBtn.addEventListener("click", () => {
+    logMealModal.classList.add("hidden");
+});
 
     function fillModal() {
     const servings = Number(servingsInput.value);
@@ -522,17 +553,6 @@ async function filterByCategory(categoryName){
     modalFat.textContent = Math.round(n.fat * servings) + "g";
 }
 
-logMealBtn.addEventListener("click", () => {
-    if (!currentMeal || !currentNutrition) return;   // nutrition didn't arrive yet
-
-    servingsInput.value = 1;       // start from 1 serving
-    fillModal();
-    logMealModal.classList.remove("hidden");
-});
-
-cancelLogMealBtn.addEventListener("click", () => {
-    logMealModal.classList.add("hidden");
-});
 
 
 document.getElementById("increase-servings").addEventListener("click", () => {
@@ -550,14 +570,336 @@ document.getElementById("decrease-servings").addEventListener("click", () => {
 servingsInput.addEventListener("input", fillModal);
 
 
-logMealBtn.addEventListener("click", () => {
-    console.log("1. button clicked");
-    console.log("2. currentMeal:", currentMeal);
-    console.log("3. currentNutrition:", currentNutrition);
 
-    if (!currentMeal || !currentNutrition) return;
+// add meal in log 
 
-    servingsInput.value = 1;
-    fillModal();
-    logMealModal.classList.remove("hidden");
+
+confirmLogMeal.addEventListener("click",() => {
+    const servings = Number(servingsInput.value);
+    const item = {
+        id: Date.now(),
+        name: currentMeal.name,
+        image: currentMeal.thumbnail,
+        servings: servings,
+        calories: Math.round(currentNutrition.calories * servings),
+        protein: Math.round(currentNutrition.protein * servings),
+        carbs: Math.round(currentNutrition.carbs * servings),
+        fat: Math.round(currentNutrition.fat * servings),
+        date: new Date().toDateString(),      
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    }
+    const list = getFoodLog();
+    list.push(item);
+    saveFoodLog(list);
+    displayMealInLog()
+
+    logMealModal.classList.add("hidden");
+        Swal.fire({
+            title: `${item.name} ${item.servings} has been added to your log`,
+            html: `<span style="color: green; font-size: 14px;">
+                ${item.calories} calories
+            </span>`,
+            customClass: {
+                title: "small-title"
+            },
+            icon: "success",
+            draggable: true
+        });
+})
+
+
+
+function displayMealInLog() {
+    const today = new Date().toDateString();
+    updateLogStats(); 
+    const allItems = getFoodLog();
+
+    const todayItems = allItems.filter(item => item.date === today);
+
+    loggedItemsCount.textContent = `Logged Items (${todayItems.length})`;
+
+    if (todayItems.length === 0) {
+        loggedItemsList.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+                <i class="fa-solid fa-utensils text-4xl mb-3 text-gray-300"></i>
+                <p class="font-medium">No meals logged today</p>
+                <p class="text-sm">Add meals from the Meals page or scan products</p>
+            </div>`;
+        return;
+    }
+
+    let box = "";
+
+    for (let i = 0; i < todayItems.length; i++) {
+        const item = todayItems[i];
+
+        box += `
+            <div class="flex flex-row items-center gap-4 p-3 bg-gray-50 rounded-xl w-full">
+                <img src="${item.image}" alt="${item.name}" class="w-14 h-14 rounded-xl object-cover shrink-0">
+                <div class="flex-1 min-w-0">
+                    <h5 class="font-semibold text-gray-900">
+                        ${item.name}
+                    </h5>
+                    <p class="text-xs text-gray-500 mt-0.5">
+                        ${item.servings} serving(s)
+                        <span class="mx-1">•</span>
+                        <span class="text-emerald-600">Recipe</span>
+                    </p>
+                    <p class="text-xs text-gray-400 mt-1">
+                        ${item.time}
+                    </p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <span class="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                        ${item.protein}g P
+                    </span>
+                    <span class="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                        ${item.carbs}g C
+                    </span>
+                    <span class="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">
+                        ${item.fat}g F
+                    </span>
+                </div>
+                <div class="text-center min-w-16">
+                    <p class="text-lg font-bold text-emerald-600">
+                        ${item.calories}
+                    </p>
+                    <p class="text-xs text-gray-500">kcal</p>
+                </div>
+                <button
+                    type="button"
+                    data-id="${item.id}"
+                    class="delete-meal-btn text-gray-400 hover:text-red-500 transition-colors p-2"
+                    title="Delete meal"
+                    aria-label="Delete ${item.name}"
+                >
+                    <i class="fa-solid fa-trash-can text-lg"></i>
+                </button>
+            </div>
+        `;
+    }
+
+    loggedItemsList.innerHTML = box;
+}
+
+
+
+loggedItemsList.addEventListener("click", (e) => {
+    const deleteBtn = e.target.closest(".delete-meal-btn");
+
+    if (!deleteBtn) return;
+    const mealId = deleteBtn.dataset.id;
+
+    Swal.fire({
+        title: "Delete this meal?",
+        text: "This meal will be removed from your food log.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#ef4444",
+        confirmButtonText: "Yes, delete it",
+        cancelButtonText: "Cancel"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const updatedItems = getFoodLog().filter(
+                item => String(item.id) !== String(mealId)
+            );
+
+            saveFoodLog(updatedItems);
+            displayMealInLog();
+
+            Swal.fire({
+                title: "Deleted!",
+                text: "Your meal has been removed.",
+                icon: "success",
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
+    });
 });
+
+// clearAll function 
+
+
+clearFoodlog.addEventListener("click", () => {
+
+    const list = getFoodLog();
+
+    if (list.length === 0) {
+        Swal.fire({
+            title: "Your food log is already empty!",
+            icon: "info"
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: "Clear all meals?",
+        text: "All your logged meals will be deleted permanently.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#ef4444",
+        confirmButtonText: "Yes, clear all",
+        cancelButtonText: "Cancel"
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            saveFoodLog([]);
+            displayMealInLog();
+
+            Swal.fire({
+                title: "Cleared!",
+                text: "Your food log is now empty.",
+                icon: "success",
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+        }
+
+    });
+
+});
+
+
+
+
+// calc the total for each day and sum ....
+function sumItems(items) {
+    const total = { calories: 0, protein: 0, carbs: 0, fat: 0, count: items.length };
+    for (let i = 0; i < items.length; i++) {
+        total.calories += items[i].calories;
+        total.protein += items[i].protein;
+        total.carbs += items[i].carbs;
+        total.fat += items[i].fat;
+    }
+    return total;
+}
+
+// 1) Today's Nutrition
+function renderTodayNutrition(todayTotal) {
+    const rows = [
+        { 
+            label: "Calories",
+            value: todayTotal.calories,
+            goal: dailyGoal.calories,
+            unit: "kcal",
+            bg: "bg-emerald-50",
+            bar: "bg-emerald-500"
+        },
+        { 
+            label: "Protein",
+            value: todayTotal.protein,
+            goal: dailyGoal.protein,
+            unit: "g",
+            bg: "bg-blue-50",    
+            bar: "bg-blue-500" 
+        },
+        { 
+            label: "Carbs",
+            value: todayTotal.carbs,    
+            goal: dailyGoal.carbs,    
+            unit: "g",    
+            bg: "bg-amber-50",   
+            bar: "bg-amber-500"
+        },
+        {
+            label: "Fat",      
+            value: todayTotal.fat,      
+            goal: dailyGoal.fat,      
+            unit: "g",    
+            bg: "bg-purple-50",  
+            bar: "bg-purple-500" 
+        }
+    ];
+
+    let box = "";
+    for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        const percent = Math.round((r.value / r.goal) * 100);
+        const isOver = r.value > r.goal;
+        const barColor = isOver ? "bg-red-500" : r.bar;
+        const textColor = isOver ? "text-red-500" : "text-gray-500";
+
+        box += `
+        <div class="${r.bg} rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-semibold text-gray-700">${r.label}</span>
+                <span class="text-xs ${textColor}">${percent}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="${barColor} h-2.5 rounded-full" style="width: ${Math.min(percent, 100)}%"></div>
+            </div>
+            <div class="flex items-center justify-between mt-2 text-xs">
+                <span class="font-bold ${isOver ? "text-red-500" : "text-gray-700"}">${r.value} ${r.unit}</span>
+                <span class="text-gray-400">/ ${r.goal} ${r.unit}</span>
+            </div>
+        </div>`;
+    }
+    todayProgress.innerHTML = box;
+}
+
+function getWeekDays() {
+    const today = new Date();
+    const daysSinceSaturday = (today.getDay() + 1) % 7;
+    const start = new Date(today);
+    start.setDate(today.getDate() - daysSinceSaturday);
+
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        days.push(d);
+    }
+    return days;
+}
+
+function renderWeekly(allItems) {
+    const days = getWeekDays();
+    const todayStr = new Date().toDateString();
+
+    let box = `<div class="grid grid-cols-7 gap-2 w-full">`;
+    let weekCalories = 0;
+    let weekItems = 0;
+    let daysOnGoal = 0;
+
+    for (let i = 0; i < days.length; i++) {
+        const dayStr = days[i].toDateString();
+        const dayItems = allItems.filter(item => item.date === dayStr);
+        const total = sumItems(dayItems);
+
+        weekCalories += total.calories;
+        weekItems += total.count;
+        if (total.calories > 0 && total.calories <= dailyGoal.calories) daysOnGoal++;
+
+        const isToday = dayStr === todayStr;
+        const hasData = total.calories > 0;
+
+        box += `
+        <div class="text-center p-3 rounded-xl ${isToday ? "bg-indigo-100" : ""}">
+            <p class="text-xs text-gray-500">${days[i].toLocaleDateString("en-US", { weekday: "short" })}</p>
+            <p class="text-sm font-semibold text-gray-900 mb-2">${days[i].getDate()}</p>
+            <p class="text-xl font-bold ${hasData ? "text-emerald-600" : "text-gray-300"}">${total.calories}</p>
+            <p class="text-xs ${hasData ? "text-emerald-500" : "text-gray-300"}">kcal</p>
+            ${hasData ? `<p class="text-xs text-gray-400 mt-1">${total.count} item${total.count > 1 ? "s" : ""}</p>` : ""}
+        </div>`;
+    }
+    box += `</div>`;
+
+    weeklyChart.className = "bg-white rounded-xl"; 
+    weeklyChart.innerHTML = box;
+
+    weeklyAverageEl.textContent = `${Math.round(weekCalories / 7)} kcal`;
+    weeklyTotalItemsEl.textContent = `${weekItems} items`;
+    daysOnGoalEl.textContent = `${daysOnGoal}/7`;
+}
+
+// one function that refreshes everything
+function updateLogStats() {
+    const allItems = getFoodLog();
+    const todayItems = allItems.filter(item => item.date === new Date().toDateString());
+
+    renderTodayNutrition(sumItems(todayItems));
+    renderWeekly(allItems);
+}

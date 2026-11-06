@@ -14,7 +14,6 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script>
-    <script src="https://cdn.jsdelivr.net/ajax/libs/sweetalert2@11"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -1032,77 +1031,20 @@
             </h3>
 
             <!-- Progress Bars -->
-            <div
-              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
-            >
-              <!-- Calories Progress -->
-              <div class="bg-emerald-50 rounded-xl p-4">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-semibold text-gray-700"
-                    >Calories</span
-                  >
-                  <span class="text-sm text-gray-500">0 / 2000 kcal</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    class="bg-emerald-500 h-2.5 rounded-full"
-                    style="width: 0%"
-                  ></div>
-                </div>
-              </div>
-              <!-- Protein Progress -->
-              <div class="bg-blue-50 rounded-xl p-4">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-semibold text-gray-700"
-                    >Protein</span
-                  >
-                  <span class="text-sm text-gray-500">0 / 50 g</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    class="bg-blue-500 h-2.5 rounded-full"
-                    style="width: 0%"
-                  ></div>
-                </div>
-              </div>
-              <!-- Carbs Progress -->
-              <div class="bg-amber-50 rounded-xl p-4">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-semibold text-gray-700">Carbs</span>
-                  <span class="text-sm text-gray-500">0 / 250 g</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    class="bg-amber-500 h-2.5 rounded-full"
-                    style="width: 0%"
-                  ></div>
-                </div>
-              </div>
-              <!-- Fat Progress -->
-              <div class="bg-purple-50 rounded-xl p-4">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-semibold text-gray-700">Fat</span>
-                  <span class="text-sm text-gray-500">0 / 65 g</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    class="bg-purple-500 h-2.5 rounded-full"
-                    style="width: 0%"
-                  ></div>
-                </div>
-              </div>
-            </div>
+            <div id="today-progress" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"></div>
 
             <!-- Logged Items -->
             <div class="border-t border-gray-200 pt-4">
               <div class="flex items-center justify-between mb-3">
-                <h4 class="text-sm font-semibold text-gray-700">
+                <h4
+                id="logged-items-count"
+                class="text-sm font-semibold text-gray-700">
                   Logged Items (0)
                 </h4>
                 <button
                   id="clear-foodlog"
                   class="text-red-500 hover:text-red-600 text-sm font-medium"
-                  style="display: none"
+                  
                 >
                   <i class="fa-solid fa-trash mr-1"></i>Clear All
                 </button>
@@ -1142,6 +1084,7 @@
             </div>
           </div>
 
+          
           <!-- Quick Actions -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
@@ -1153,8 +1096,8 @@
                 <i class="fa-solid fa-plus text-emerald-600 text-xl"></i>
               </div>
               <div>
-                <p class="font-semibold text-gray-900">Log a Meal</p>
-                <p class="text-sm text-gray-500">Add from recipes</p>
+                <p class="font-semibold text-gray-900">Weekly Average</p>
+                <p class="text-sm text-gray-500" id="weekly-average">0 kcal</p>
               </div>
             </button>
 
@@ -1167,8 +1110,8 @@
                 <i class="fa-solid fa-barcode text-teal-600 text-xl"></i>
               </div>
               <div>
-                <p class="font-semibold text-gray-900">Scan Product</p>
-                <p class="text-sm text-gray-500">Use barcode scanner</p>
+                <p class="font-semibold text-gray-900">Total Items This Week</p>
+                <p class="text-sm text-gray-500" id="weekly-total-items"> 0 items</p>
               </div>
             </button>
 
@@ -1181,8 +1124,8 @@
                 <i class="fa-solid fa-pencil text-purple-600 text-xl"></i>
               </div>
               <div>
-                <p class="font-semibold text-gray-900">Custom Entry</p>
-                <p class="text-sm text-gray-500">Add custom food</p>
+                <p class="font-semibold text-gray-900">Days On Goal</p>
+                <p class="text-sm text-gray-500" id="days-on-goal">0/7</p>
               </div>
             </button>
           </div>
@@ -1258,6 +1201,7 @@
 
 
     <!-- Main JavaScript Entry Point -->
+     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type="module" src="./src/js/main.js"></script>
   </body>
 </html>
