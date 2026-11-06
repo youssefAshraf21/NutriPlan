@@ -27,6 +27,19 @@ const mealsLink = document.getElementById("mealsLink");
 const productScannerLink = document.getElementById("productScannerLink");
 const foodLogLink = document.getElementById("foodLogLink");
 
+const logMealBtn = document.getElementById("log-meal-btn");
+const logMealModal = document.getElementById("log-meal-modal");
+const cancelLogMealBtn = document.getElementById("cancel-log-meal");
+const logMealImg = document.getElementById("logMealImg");
+const logMealName = document.getElementById("log-meal-name");
+const servingsInput = document.getElementById("meal-servings");
+const modalCalories = document.getElementById("modal-calories");
+const modalProtein = document.getElementById("modal-protein");
+const modalCarbs = document.getElementById("modal-carbs");
+const modalFat = document.getElementById("modal-fat");
+
+let currentMeal = null;        // the meal that is open now
+let currentNutrition = null;   // its nutrition per serving
 let categoryArr = [];
 let areaArr = [];
 let mealsArr = [];
@@ -305,7 +318,7 @@ function displayMeals(meals) {
               </div>
             </div>`
     }
-    mealsContainer.innerHTML = box;
+    mealsContainer.innerHTML = box; 
 }
 getMeals() 
 
@@ -339,6 +352,8 @@ document.getElementById("back-to-meals-btn").addEventListener("click", () => {
 
 // handle the details page
 function displayMealDetails(meal) {
+    currentMeal = meal;          // save it for the Log modal
+    currentNutrition = null; 
     mealImg.src = meal.thumbnail;
     mealImg.alt = meal.name;
     mealCategoryDetail.textContent = meal.category;
@@ -371,7 +386,11 @@ function displayMealDetails(meal) {
     }
     instructionsList.innerHTML = stepsBox;
 
-    mealVideo.src = meal.youtube
+    if (meal.youtube && meal.youtube.startsWith("https://www.youtube.com/watch?v=")) {
+        mealVideo.src = meal.youtube.replace("watch?v=", "embed/");
+    } else {
+        mealVideo.src = "NOT FOUND";    
+    }
 }
 
 
@@ -397,7 +416,7 @@ async function getNutrition(meal) {
     });
 
     const data = await response.json();
-    (data);
+    currentNutrition = data.data.perServing;   
     displayNutrition(data.data);
 }
 
@@ -478,3 +497,67 @@ async function filterByCategory(categoryName){
 
 
 
+// log btn  click
+    logMealBtn.addEventListener("click",() => {
+        logMealModal.classList.remove("hidden");
+        
+        
+    })
+
+    cancelLogMealBtn.addEventListener("click",() => {
+        logMealModal.classList.add("hidden");
+    })
+
+
+    function fillModal() {
+    const servings = Number(servingsInput.value);
+    const n = currentNutrition;
+
+    logMealImg.src = currentMeal.thumbnail;
+    logMealName.textContent = currentMeal.name;
+
+    modalCalories.textContent = Math.round(n.calories * servings);
+    modalProtein.textContent = Math.round(n.protein * servings) + "g";
+    modalCarbs.textContent = Math.round(n.carbs * servings) + "g";
+    modalFat.textContent = Math.round(n.fat * servings) + "g";
+}
+
+logMealBtn.addEventListener("click", () => {
+    if (!currentMeal || !currentNutrition) return;   // nutrition didn't arrive yet
+
+    servingsInput.value = 1;       // start from 1 serving
+    fillModal();
+    logMealModal.classList.remove("hidden");
+});
+
+cancelLogMealBtn.addEventListener("click", () => {
+    logMealModal.classList.add("hidden");
+});
+
+
+document.getElementById("increase-servings").addEventListener("click", () => {
+    servingsInput.value = Number(servingsInput.value) + 0.5;
+    fillModal();
+});
+
+document.getElementById("decrease-servings").addEventListener("click", () => {
+    if (Number(servingsInput.value) > 0.5) {
+        servingsInput.value = Number(servingsInput.value) - 0.5;
+        fillModal();
+    }
+});
+
+servingsInput.addEventListener("input", fillModal);
+
+
+logMealBtn.addEventListener("click", () => {
+    console.log("1. button clicked");
+    console.log("2. currentMeal:", currentMeal);
+    console.log("3. currentNutrition:", currentNutrition);
+
+    if (!currentMeal || !currentNutrition) return;
+
+    servingsInput.value = 1;
+    fillModal();
+    logMealModal.classList.remove("hidden");
+});
