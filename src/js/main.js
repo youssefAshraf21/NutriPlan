@@ -216,7 +216,7 @@ getCategories();
 function displayCategories(categories, categoryColors) {
     let box = "";
     for (let i = 0; i < 12; i++) {
-        const style = categoryColors[i] || categoryColors[0] ; // safe if colors run out
+        const style = categoryColors[i] || categoryColors[0] ; // just for safety i hate colors*
         box += `
         <div class="category-card ${style.background} rounded-xl p-3 border ${style.border} hover:shadow-md cursor-pointer transition-all group"
             data-category="${categories[i].name}">
@@ -240,7 +240,6 @@ async function getAreas() {
     const data = await response.json();
 
     areaArr = data.results;
-    console.log(areaArr);
     displayArea(areaArr);
     
 }
@@ -249,22 +248,26 @@ getAreas();
 
 function displayArea(area) {
     let box = `<button
-              class="px-4 py-2 bg-emerald-600 text-white rounded-full font-medium text-sm whitespace-nowrap hover:bg-emerald-700 transition-all"
-            >
+              class="area-card px-4 py-2 bg-emerald-600 text-white rounded-full font-medium text-sm whitespace-nowrap hover:bg-emerald-700 transition-all"
+                data-area=""            
+              >
               All Recipes
             </button>`;
     for(let i = 0; i <10; i++) {
         box += `
         
         <button
-              class="px-4 py-2 bg-gray-100 text-gray-700 rounded-full font-medium text-sm whitespace-nowrap hover:bg-gray-200 transition-all"
-            >
+              class="area-card px-4 py-2 bg-gray-100 text-gray-700 rounded-full font-medium text-sm whitespace-nowrap hover:bg-gray-200 transition-all"
+            data-area="${area[i].name}"
+              >
               ${area[i].name}
             </button>`
     }
 
     areaContainer.innerHTML = box;
 }
+
+
 
 
 // get the cards from api 
@@ -452,7 +455,6 @@ async function getNutrition(meal) {
 
 function displayNutrition(data) {
     const dataPerServing = data.perServing;
-
     heroServings.textContent = `${data.servings} servings`;
     heroCalories.textContent = `${dataPerServing.calories} cal/serving`;
 
@@ -525,6 +527,49 @@ async function filterByCategory(categoryName){
 }
 
 
+// handle the area filter 
+
+areaContainer.addEventListener("click", (e) => {
+    const area = e.target.closest(".area-card");
+    console.log(area);
+    const selectedArea = area.dataset.area;
+    console.log(selectedArea);
+    filterByArea(selectedArea)
+})
+
+async function filterByArea(areaName){
+    const response = await fetch(`${BASE_URL}/meals/filter?area=${areaName}&page=1&limit=25`)
+    const data = await response.json();
+    mealsArr = data.results;
+    displayMeals(mealsArr);
+}
+
+// handle tha all recepies btn 
+
+areaContainer.addEventListener("click", (e) => {
+    const area = e.target.closest(".area-card");
+    if (!area) return;
+    setActiveArea(area)
+    const selectedArea = area.dataset.area;
+
+    if (selectedArea === "") {
+        getMeals();                 
+    } else {
+        filterByArea(selectedArea);
+    }
+});
+
+// handle the active button area color
+
+function setActiveArea(clicked) {
+    const buttons = areaContainer.querySelectorAll(".area-card");
+    buttons.forEach(btn => {
+        btn.classList.remove("bg-emerald-600", "text-white", "hover:bg-emerald-700");
+        btn.classList.add("bg-gray-100", "text-gray-700", "hover:bg-gray-200");
+    });
+    clicked.classList.remove("bg-gray-100", "text-gray-700", "hover:bg-gray-200");
+    clicked.classList.add("bg-emerald-600", "text-white", "hover:bg-emerald-700");
+}
 
 // log btn  click
     logMealBtn.addEventListener("click", () => {
@@ -903,3 +948,4 @@ function updateLogStats() {
     renderTodayNutrition(sumItems(todayItems));
     renderWeekly(allItems);
 }
+
