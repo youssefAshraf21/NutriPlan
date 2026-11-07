@@ -51,13 +51,16 @@ const todayProgress = document.getElementById("today-progress");
 const weeklyAverageEl = document.getElementById("weekly-average");
 const weeklyTotalItemsEl = document.getElementById("weekly-total-items");
 const daysOnGoalEl = document.getElementById("days-on-goal");
-
+const productCategory = document.getElementById("product-categories");
+const productsContainer = document.getElementById("products-grid");
+const productSearchInput = document.getElementById("product-search-input");
 
 let currentMeal = null;        
 let currentNutrition = null;   
 let categoryArr = [];
 let areaArr = [];
 let mealsArr = [];
+let productArr = [];
 let categoryScannerArr = [];
 const categoryScannerColors =  [
   // Snacks
@@ -87,9 +90,9 @@ const categoryScannerColors =  [
   },
   // Chocolates
   {
-    color: "bg-gradient-to-br from-amber-700 to-orange-900",
+    color: "chocolate-gradient",
     icon: "fa-solid fa-candy-cane"
-  },
+},
   // Biscuits & Cookies
   {
     color: "bg-gradient-to-br from-orange-400 to-red-500",
@@ -122,9 +125,9 @@ const categoryScannerColors =  [
   },
   // Coffees
   {
-    color: "bg-gradient-to-br from-stone-500 to-amber-800",
+    color: "coffee-gradient",
     icon: "fa-solid fa-mug-hot"
-  },
+},
   // Teas
   {
     color: "bg-gradient-to-br from-green-400 to-emerald-600",
@@ -142,9 +145,9 @@ const categoryScannerColors =  [
   },
   // Meats
   {
-    color: "bg-gradient-to-br from-rose-500 to-red-700",
+    color: "meat-gradient",
     icon: "fa-solid fa-drumstick-bite"
-  },
+},
   // Fish & Seafood
   {
     color: "bg-gradient-to-br from-cyan-400 to-teal-600",
@@ -167,9 +170,9 @@ const categoryScannerColors =  [
   },
   // Spreads
   {
-    color: "bg-gradient-to-br from-purple-400 to-fuchsia-600",
+    color: "spreads-gradient",
     icon: "fa-solid fa-jar"
-  },
+},
   // Pasta
   {
     color: "bg-gradient-to-br from-orange-400 to-yellow-500",
@@ -1084,16 +1087,139 @@ async function getCategoriesScanner() {
     });
     const data = await response.json();
     categoryScannerArr = data.results;
-    console.log(categoryScannerArr)
-    // displayCategories(categoryArr,categoriesColors );
+    displayCategoriesScanner(categoryScannerArr,categoryScannerColors );
 }
 
 getCategoriesScanner()
 
-function displayCategoriesScanner(categoryScannerArr, categoriesColors) {
-    let box=``;
-    for(let i = 0; i < categoryScannerArr.length; i++) {
-        const style = categoryColors[i] || categoryColors[0]; // just for safety i hate colors*
+function displayCategoriesScanner(categoryArr, categoriesColors) {
+    let box = "";
 
+    for (let i = 0; i < categoryArr.length; i++) {
+        box += `
+            <button class="product-category-btn px-4 py-3  ${categoriesColors[i].color} text-white rounded-lg text-md font-semibold whitespace-nowrap hover:opacity-80 transition-all">
+                <i class="${categoriesColors[i].icon} mr-1.5"></i>${categoryArr[i].name}
+            </button>
+        `;
     }
+
+    productCategory.innerHTML = box;
 }
+
+
+// make the display product function to use it in search...
+
+//display product function
+
+function displayProducts(productarr) {
+    let box = "";
+    if(productarr.length == 0) {
+        box +=`<div class="col-span-4 flex flex-col items-center justify-center py-12 text-center">
+            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <i class="fa-solid fa-search text-gray-400 text-2xl"></i>
+            </div>
+            <p class="text-gray-500 text-lg">No recipes found</p>
+            <p class="text-gray-400 text-sm mt-2">Try searching for something else</p>
+        </div>`
+        return;
+    }
+    for(let i = 0; i < productarr.length; i++) {
+        box +=`<div
+                class="product-card bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer group"
+                data-barcode="7613034626844"
+              >
+                <div
+                  class="relative h-40 bg-gray-100 flex items-center justify-center overflow-hidden"
+                >
+                  <img
+                    class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"
+                    src="${productarr[i].image}"
+                    alt="Product Name"
+                    loading="lazy"
+                  />
+
+                  <!-- Nutri-Score Badge -->
+                  <div
+                    class="absolute top-2 left-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded uppercase"
+                  >
+                    Nutri-Score ${productarr[i].nutritionGrade ? productarr[i].nutritionGrade : "0"}
+                  </div>
+
+                  <!-- NOVA Badge -->
+                  <div
+                    class="absolute top-2 right-2 bg-lime-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center"
+                    title="NOVA 2"
+                  >
+                    ${productarr[i].novaGroup}
+                  </div>
+                </div>
+
+                <div class="p-4">
+                  <p
+                    class="text-xs text-emerald-600 font-semibold mb-1 truncate"
+                  >
+                    Brand Name
+                  </p>
+                  <h3
+                    class="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-emerald-600 transition-colors"
+                  >
+                    Product Name
+                  </h3>
+
+                  <div
+                    class="flex items-center gap-3 text-xs text-gray-500 mb-3"
+                  >
+                    <span
+                      ><i class="fa-solid fa-weight-scale mr-1"></i>250g</span
+                    >
+                    <span
+                      ><i class="fa-solid fa-fire mr-1"></i>350 kcal/100g</span
+                    >
+                  </div>
+
+                  <!-- Mini Nutrition -->
+                  <div class="grid grid-cols-4 gap-1 text-center">
+                    <div class="bg-emerald-50 rounded p-1.5">
+                      <p class="text-xs font-bold text-emerald-700">8.5g</p>
+                      <p class="text-[10px] text-gray-500">Protein</p>
+                    </div>
+                    <div class="bg-blue-50 rounded p-1.5">
+                      <p class="text-xs font-bold text-blue-700">45.2g</p>
+                      <p class="text-[10px] text-gray-500">Carbs</p>
+                    </div>
+                    <div class="bg-purple-50 rounded p-1.5">
+                      <p class="text-xs font-bold text-purple-700">12.3g</p>
+                      <p class="text-[10px] text-gray-500">Fat</p>
+                    </div>
+                    <div class="bg-orange-50 rounded p-1.5">
+                      <p class="text-xs font-bold text-orange-700">18.5g</p>
+                      <p class="text-[10px] text-gray-500">Sugar</p>
+                    </div>
+                  </div>
+                </div>
+              </div>`
+    }
+    productsContainer.innerHTML = box;
+}
+
+
+//search product function
+
+productSearchInput.addEventListener("input", (e) => {
+    searchProduct(e.target.value);
+});
+
+async function searchProduct(input) {
+    const response = await fetch(`${BASE_URL}/products/search?q=${input}&page=1&limit=24`,);
+    const data = await response.json();
+    productArr = data.results;
+    console.log(productArr);
+    
+    displayProducts(productArr);
+}
+searchProduct()
+
+
+
+
+

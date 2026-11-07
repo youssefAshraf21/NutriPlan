@@ -13,3 +13,28 @@
 .bg-slate-gradient {
   background-image: linear-gradient(to bottom right, #64748b, #52525b);
 }
+
+
+.bg-gradient-to-br.from-amber-500.to-orange-600 {
+    background-image: linear-gradient(to bottom right, #f59e0b, #ea580c);
+}
+
+
+
+.chocolate-gradient {
+    background: linear-gradient(to bottom right, #f59e0b, #ea580c);
+}
+
+/* Coffee */
+.coffee-gradient {
+    background: linear-gradient(to bottom right, #78716c, #92400e);
+}
+
+/* Meat */
+.meat-gradient {
+    background: linear-gradient(to bottom right, #f43f5e, #b91c1c);
+}
+
+.spreads-gradient {
+    background: linear-gradient(to bottom right, #c084fc, #c026d3);
+}
