@@ -1,6 +1,20 @@
 const API_KEY  = "TGJnKT7kRQHzRHrpbNPfddPzPLpftLJjHkbCmmpD"
 const BASE_URL = "https://nutriplan-api.vercel.app/api"
 
+
+
+//**************************************************************** */
+
+
+// okay now i beenig search in product to found weight  in api and i dont found i was searched for 1 hour!!! 
+//then i searched and i arrived that there a api : https://world.openfoodfacts.org/ i dont know but i dont found any way else i will use it :)
+
+
+const PRODUCTS_API = "https://world.openfoodfacts.org";
+
+//************************************************************************ */
+
+
 const categoriesContainer = document.getElementById("categories-grid");
 const mealsContainer = document.getElementById("recipes-grid");
 
@@ -54,6 +68,8 @@ const daysOnGoalEl = document.getElementById("days-on-goal");
 const productCategory = document.getElementById("product-categories");
 const productsContainer = document.getElementById("products-grid");
 const productSearchInput = document.getElementById("product-search-input");
+const barcodeSearchInput = document.getElementById("barcode-input");
+const lookupBarcodeBtn = document.getElementById("lookup-barcode-btn");
 
 let currentMeal = null;        
 let currentNutrition = null;   
@@ -329,6 +345,9 @@ setupNavigation();
 async function getCategories() {
     const response = await fetch(`${BASE_URL}/meals/categories`, {
     });
+    if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+    }
     const data = await response.json();
     categoryArr = data.results;
     displayCategories(categoryArr,categoriesColors );
@@ -405,6 +424,9 @@ async function getMeals() {
             "Content-Type": "application/json"
         }
     });
+    if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+    }
     const data = await response.json();
     mealsArr = data.results;
     displayMeals(mealsArr);
@@ -567,12 +589,16 @@ async function getNutrition(meal) {
             "Content-Type": "application/json",
             "x-api-key": `${API_KEY}`
         },
+        
         body: JSON.stringify({
             recipeName: meal.name,
             ingredients: ingredientsText
         })
+        
     });
-
+        if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+        }
     const data = await response.json();
     currentNutrition = data.data.perServing;   
     displayNutrition(data.data);
@@ -629,6 +655,9 @@ searchMeal.addEventListener("input", (e) => {
 
 async function searchMeals(input) {
     const response = await fetch(`${BASE_URL}/meals/search?q=${input}`,)
+    if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+    }
     const data = await response.json();
     mealsArr = data.results;
     displayMeals(mealsArr);
@@ -647,6 +676,9 @@ categoriesContainer.addEventListener("click", (e) => {
 
 async function filterByCategory(categoryName){
     const response = await fetch(`${BASE_URL}/meals/filter?category=${categoryName}&page=1&limit=25`)
+    if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+    }
     const data = await response.json();
     mealsArr = data.results;
     displayMeals(mealsArr);
@@ -655,16 +687,11 @@ async function filterByCategory(categoryName){
 
 // handle the area filter 
 
-areaContainer.addEventListener("click", (e) => {
-    const area = e.target.closest(".area-card");
-    console.log(area);
-    const selectedArea = area.dataset.area;
-    console.log(selectedArea);
-    filterByArea(selectedArea)
-})
-
 async function filterByArea(areaName){
     const response = await fetch(`${BASE_URL}/meals/filter?area=${areaName}&page=1&limit=25`)
+    if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+    }
     const data = await response.json();
     mealsArr = data.results;
     displayMeals(mealsArr);
@@ -1085,6 +1112,9 @@ function updateLogStats() {
 async function getCategoriesScanner() {
     const response = await fetch(`${BASE_URL}/products/categories`, {
     });
+    if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+        }
     const data = await response.json();
     categoryScannerArr = data.results;
     displayCategoriesScanner(categoryScannerArr,categoryScannerColors );
@@ -1113,113 +1143,246 @@ function displayCategoriesScanner(categoryArr, categoriesColors) {
 
 function displayProducts(productarr) {
     let box = "";
-    if(productarr.length == 0) {
-        box +=`<div class="col-span-4 flex flex-col items-center justify-center py-12 text-center">
-            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <i class="fa-solid fa-search text-gray-400 text-2xl"></i>
+
+    if (productarr.length === 0) {
+        productsContainer.innerHTML = `
+            <div class="col-span-full flex flex-col items-center justify-center py-12 text-center">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-search text-gray-400 text-2xl"></i>
+                </div>
+                <p class="text-gray-500 text-lg">No products found</p>
+                <p class="text-gray-400 text-sm mt-2">Try searching for something else</p>
             </div>
-            <p class="text-gray-500 text-lg">No recipes found</p>
-            <p class="text-gray-400 text-sm mt-2">Try searching for something else</p>
-        </div>`
+        `;
         return;
     }
-    for(let i = 0; i < productarr.length; i++) {
-        box +=`<div
+
+    for (let i = 0; i < productarr.length; i++) {
+
+        let product = productarr[i];
+
+        let grade = product.nutritionGrade;
+        let nova = product.novaGroup;
+        console.log("container:", productsContainer, "length:", productarr.length);
+        box += `
+            <div
                 class="product-card bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer group"
-                data-barcode="7613034626844"
-              >
-                <div
-                  class="relative h-40 bg-gray-100 flex items-center justify-center overflow-hidden"
-                >
-                  <img
-                    class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"
-                    src="${productarr[i].image}"
-                    alt="Product Name"
-                    loading="lazy"
-                  />
+                data-barcode="${product.barcode}"
+            >
 
-                  <!-- Nutri-Score Badge -->
-                  <div
-                    class="absolute top-2 left-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded uppercase"
-                  >
-                    Nutri-Score ${productarr[i].nutritionGrade ? productarr[i].nutritionGrade : "0"}
-                  </div>
+                <div class="relative h-40 bg-gray-100 flex items-center justify-center overflow-hidden">
 
-                  <!-- NOVA Badge -->
-                  <div
-                    class="absolute top-2 right-2 bg-lime-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center"
-                    title="NOVA 2"
-                  >
-                    ${productarr[i].novaGroup}
-                  </div>
+                    <img
+                        class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"
+                        src="${product.image}"
+                        alt="${product.name}"
+                        loading="lazy"
+                    />
+
+                    <!-- Nutri-Score Badge -->
+                    <div class="absolute top-2 left-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded uppercase">
+                        Nutri-Score ${grade}
+                    </div>
+
+                    <!-- NOVA Badge -->
+                    <div
+                        class="absolute top-2 right-2 bg-lime-500 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center"
+                        title="NOVA ${nova}"
+                    >
+                        ${nova}
+                    </div>
+
                 </div>
 
                 <div class="p-4">
-                  <p
-                    class="text-xs text-emerald-600 font-semibold mb-1 truncate"
-                  >
-                    Brand Name
-                  </p>
-                  <h3
-                    class="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-emerald-600 transition-colors"
-                  >
-                    Product Name
-                  </h3>
 
-                  <div
-                    class="flex items-center gap-3 text-xs text-gray-500 mb-3"
-                  >
-                    <span
-                      ><i class="fa-solid fa-weight-scale mr-1"></i>250g</span
-                    >
-                    <span
-                      ><i class="fa-solid fa-fire mr-1"></i>350 kcal/100g</span
-                    >
-                  </div>
+                    <p class="text-xs text-emerald-600 font-semibold mb-1 truncate">
+                        ${product.brand}
+                    </p>
 
-                  <!-- Mini Nutrition -->
-                  <div class="grid grid-cols-4 gap-1 text-center">
-                    <div class="bg-emerald-50 rounded p-1.5">
-                      <p class="text-xs font-bold text-emerald-700">8.5g</p>
-                      <p class="text-[10px] text-gray-500">Protein</p>
+                    <h3 class="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-emerald-600 transition-colors">
+                        ${product.name}
+                    </h3>
+
+                    <!-- Weight and Calories -->
+                    <div class="flex items-center flex-wrap gap-3 text-xs text-gray-500 mb-3">
+
+                        <span>
+                            <i class="fa-solid fa-weight-scale mr-1"></i>
+                            ${product.quantity ? product.quantity + "g" : "0"}
+                        </span>
+
+                        <span>
+                            <i class="fa-solid fa-fire mr-1"></i>
+                            ${product.calories ? product.calories + "kcal/100g" : "0"} 
+                        </span>
+
                     </div>
-                    <div class="bg-blue-50 rounded p-1.5">
-                      <p class="text-xs font-bold text-blue-700">45.2g</p>
-                      <p class="text-[10px] text-gray-500">Carbs</p>
+
+                    <!-- Mini Nutrition -->
+                    <div class="grid grid-cols-4 gap-1 text-center">
+
+                        <div class="bg-emerald-50 rounded p-1.5">
+                            <p class="text-xs font-bold text-emerald-700">
+                                ${product.protein ? product.protein + "g" : "0"}
+                            </p>
+                            <p class="text-[10px] text-gray-500">Protein</p>
+                        </div>
+
+                        <div class="bg-blue-50 rounded p-1.5">
+                            <p class="text-xs font-bold text-blue-700">
+                                ${product.carbs ? product.carbs + "g" : "0"}
+                            </p>
+                            <p class="text-[10px] text-gray-500">Carbs</p>
+                        </div>
+
+                        <div class="bg-purple-50 rounded p-1.5">
+                            <p class="text-xs font-bold text-purple-700">
+                                ${product.fat ? product.fat + "g" : "0"}
+                            </p>
+                            <p class="text-[10px] text-gray-500">Fat</p>
+                        </div>
+
+                        <div class="bg-orange-50 rounded p-1.5">
+                            <p class="text-xs font-bold text-orange-700">
+                                ${product.sugar ? product.sugar + "g" : ""}
+                            </p>
+                            <p class="text-[10px] text-gray-500">Sugar</p>
+                        </div>
+
                     </div>
-                    <div class="bg-purple-50 rounded p-1.5">
-                      <p class="text-xs font-bold text-purple-700">12.3g</p>
-                      <p class="text-[10px] text-gray-500">Fat</p>
-                    </div>
-                    <div class="bg-orange-50 rounded p-1.5">
-                      <p class="text-xs font-bold text-orange-700">18.5g</p>
-                      <p class="text-[10px] text-gray-500">Sugar</p>
-                    </div>
-                  </div>
+
                 </div>
-              </div>`
+            </div>
+        `;
     }
+
     productsContainer.innerHTML = box;
 }
 
-
 //search product function
 
-productSearchInput.addEventListener("input", (e) => {
+productSearchInput.addEventListener("input", function(e) {
     searchProduct(e.target.value);
 });
-
 async function searchProduct(input) {
-    const response = await fetch(`${BASE_URL}/products/search?q=${input}&page=1&limit=24`,);
-    const data = await response.json();
-    productArr = data.results;
-    console.log(productArr);
-    
-    displayProducts(productArr);
+
+    if (!input || !input.trim()) {
+        productArr = [];
+        displayProducts(productArr);
+        return;
+    }
+
+    try {
+        const params = new URLSearchParams({
+            search_terms: input.trim(),
+            page: 1,
+            page_size: 24,
+            json: 1
+        });
+
+        const response = await fetch(
+            `${PRODUCTS_API}/cgi/search.pl?${params}`
+        );
+
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        productArr = [];
+
+        for (let i = 0; i < data.products.length; i++) {
+
+            let product = data.products[i];
+            let nutrition = product.nutriments || {};
+
+            let productObject = {
+                barcode: product.code,
+                name: product.product_name || product.product_name_en,
+                brand: product.brands,
+                image: product.image_front_url || product.image_url,
+                quantity: product.quantity,
+
+                nutritionGrade: product.nutrition_grades || product.nutrition_grade_fr,
+                novaGroup: product.nova_group,
+
+                calories: nutrition["energy-kcal_100g"],
+                protein: nutrition.proteins_100g,
+                carbs: nutrition.carbohydrates_100g,
+                fat: nutrition.fat_100g,
+                sugar: nutrition.sugars_100g
+            };
+
+            productArr.push(productObject);
+        }
+
+
+        displayProducts(productArr);
+
+    } catch (error) {
+        console.error("Product Search Error:", error);
+    }
 }
-searchProduct()
 
 
 
 
 
+
+barcodeSearchInput.addEventListener("input", function(e) {
+    let barcode = e.target.value.trim();
+
+    if (barcode.length >= 8) {
+        searchProductByBarcode(barcode);
+    } else {
+        productArr = [];
+        displayProducts(productArr);
+    }
+});
+
+async function searchProductByBarcode(barcode) {
+    try {
+        const response = await fetch(
+            `${PRODUCTS_API}/api/v2/product/${barcode}.json`
+        );
+
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        productArr = [];
+
+        if (data.status === 1 && data.product) {
+            let product = data.product;
+            let nutrition = product.nutriments || {};
+
+            let productObject = {
+                barcode: product.code || barcode,
+                name: product.product_name || product.product_name_en || "Unknown Product",
+                brand: product.brands || "Unknown Brand",
+                image: product.image_front_url || product.image_url || "",
+                quantity: product.quantity || "",
+
+                nutritionGrade: product.nutrition_grades || product.nutrition_grade_fr || "N/A",
+                novaGroup: product.nova_group || "N/A",
+
+                calories: nutrition["energy-kcal_100g"],
+                protein: nutrition.proteins_100g,
+                carbs: nutrition.carbohydrates_100g,
+                fat: nutrition.fat_100g,
+                sugar: nutrition.sugars_100g
+            };
+
+            productArr.push(productObject);
+        }
+
+        displayProducts(productArr);
+
+    } catch (error) {
+        console.error("Barcode Search Error:", error);
+    }
+}
