@@ -70,9 +70,22 @@ const productsContainer = document.getElementById("products-grid");
 const productSearchInput = document.getElementById("product-search-input");
 const barcodeSearchInput = document.getElementById("barcode-input");
 const lookupBarcodeBtn = document.getElementById("lookup-barcode-btn");
+const nutriScoreButtons = document.querySelectorAll(".nutri-score-filter");
+const productDetailModal = document.getElementById("product-detail-modal");
+
+
+
+const loadingOverlay = document.getElementById("app-loading-overlay");
+
+const loadingSpinner = `
+<div class="col-span-full flex items-center justify-center py-12">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+</div>`;
+
 
 let currentMeal = null;        
 let currentNutrition = null;   
+let currentProduct = null;
 let categoryArr = [];
 let areaArr = [];
 let mealsArr = [];
@@ -418,18 +431,27 @@ function displayArea(area) {
 // get the cards from api 
 
 async function getMeals() {
-    const response = await fetch(`${BASE_URL}/meals/random?count=25`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json"
-        }
-    });
-    if (!response.ok) {
+    mealsContainer.innerHTML = loadingSpinner;
+
+    try {
+        const response = await fetch(`${BASE_URL}/meals/random?count=25`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+        if (!response.ok) {
             throw new Error(`API Error: ${response.status}`);
+        }
+        const data = await response.json();
+        mealsArr = data.results;
+        displayMeals(mealsArr);
+    } catch (error) {
+        console.error("Meals Error:", error);
+        displayMeals([]);
+    } finally {
+        hideLoading();
     }
-    const data = await response.json();
-    mealsArr = data.results;
-    displayMeals(mealsArr);
 }
 
 
@@ -532,7 +554,7 @@ document.getElementById("back-to-meals-btn").addEventListener("click", () => {
 
 // handle the details page
 function displayMealDetails(meal) {
-    currentMeal = meal;          // save it for the Log modal
+    currentMeal = meal;       
     currentNutrition = null; 
     mealImg.src = meal.thumbnail;
     mealImg.alt = meal.name;
@@ -654,6 +676,7 @@ searchMeal.addEventListener("input", (e) => {
 });
 
 async function searchMeals(input) {
+    mealsContainer.innerHTML = loadingSpinner;
     const response = await fetch(`${BASE_URL}/meals/search?q=${input}`,)
     if (!response.ok) {
             throw new Error(`API Error: ${response.status}`);
@@ -675,6 +698,7 @@ categoriesContainer.addEventListener("click", (e) => {
 })
 
 async function filterByCategory(categoryName){
+    mealsContainer.innerHTML = loadingSpinner;  
     const response = await fetch(`${BASE_URL}/meals/filter?category=${categoryName}&page=1&limit=25`)
     if (!response.ok) {
             throw new Error(`API Error: ${response.status}`);
@@ -688,6 +712,7 @@ async function filterByCategory(categoryName){
 // handle the area filter 
 
 async function filterByArea(areaName){
+    mealsContainer.innerHTML = loadingSpinner;  
     const response = await fetch(`${BASE_URL}/meals/filter?area=${areaName}&page=1&limit=25`)
     if (!response.ok) {
             throw new Error(`API Error: ${response.status}`);
@@ -839,9 +864,9 @@ function displayMealInLog() {
                         ${item.name}
                     </h5>
                     <p class="text-xs text-gray-500 mt-0.5">
-                        ${item.servings} serving(s)
+                        ${item.amount || item.servings + " serving(s)"}
                         <span class="mx-1">•</span>
-                        <span class="text-emerald-600">Recipe</span>
+                        <span class="text-emerald-600">${item.type || "Recipe"}</span>
                     </p>
                     <p class="text-xs text-gray-400 mt-1">
                         ${item.time}
@@ -1127,9 +1152,9 @@ function displayCategoriesScanner(categoryArr, categoriesColors) {
 
     for (let i = 0; i < categoryArr.length; i++) {
         box += `
-            <button class="product-category-btn px-4 py-3  ${categoriesColors[i].color} text-white rounded-lg text-md font-semibold whitespace-nowrap hover:opacity-80 transition-all">
-                <i class="${categoriesColors[i].icon} mr-1.5"></i>${categoryArr[i].name}
-            </button>
+            <button data-category="${categoryArr[i].name}" class="product-category-btn px-4 py-3 ${categoriesColors[i].color} text-white rounded-lg text-md font-semibold whitespace-nowrap hover:opacity-80 transition-all">
+        <i class="${categoriesColors[i].icon} mr-1.5"></i>${categoryArr[i].name}
+    </button>
         `;
     }
 
@@ -1385,4 +1410,353 @@ async function searchProductByBarcode(barcode) {
     } catch (error) {
         console.error("Barcode Search Error:", error);
     }
+}
+
+
+
+// filter the product with category and a,b,...
+
+
+nutriScoreButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+        const grade = btn.dataset.grade;   
+
+        nutriScoreButtons.forEach(b => b.classList.remove("ring-2", "ring-offset-2", "ring-emerald-500"));
+        btn.classList.add("ring-2", "ring-offset-2", "ring-emerald-500");
+
+        if (grade === "") {
+            displayProducts(productArr);
+            return;
+        }
+
+        const filtered = productArr.filter(btn =>
+            btn.nutritionGrade && btn.nutritionGrade.toLowerCase() === grade
+        );
+        displayProducts(filtered);
+    });
+});
+
+productSearchInput.addEventListener("input", () => {
+    nutriScoreButtons.forEach(brn => btn.classList.remove("ring-2", "ring-offset-2", "ring-emerald-500"));
+});
+
+productCategory.addEventListener("click", (e) => {
+    const btn = e.target.closest(".product-category-btn");
+    if (!btn) return;
+
+    productCategory.querySelectorAll(".product-category-btn").forEach(b => {
+        b.classList.remove("ring-4", "ring-emerald-300");
+    });
+    btn.classList.add("ring-4", "ring-emerald-300");
+
+    const categoryName = btn.textContent.trim();
+    searchByCategory(categoryName);
+});
+
+async function searchByCategory(categoryName) {
+    try {
+        const params = new URLSearchParams({
+            action: "process",
+            tagtype_0: "categories",
+            tag_contains_0: "contains",
+            tag_0: categoryName,
+            page_size: 24,
+            json: 1
+        });
+
+        const response = await fetch(`${PRODUCTS_API}/cgi/search.pl?${params}`);
+
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        productArr = [];
+
+        for (let i = 0; i < data.products.length; i++) {
+            let product = data.products[i];
+            let nutrition = product.nutriments || {};
+
+            if (!product.product_name && !product.product_name_en) continue;
+
+            productArr.push({
+                barcode: product.code,
+                name: product.product_name || product.product_name_en,
+                brand: product.brands,
+                image: product.image_front_url || product.image_url,
+                quantity: product.quantity,
+                nutritionGrade: product.nutrition_grades || product.nutrition_grade_fr,
+                novaGroup: product.nova_group,
+                calories: nutrition["energy-kcal_100g"],
+                protein: nutrition.proteins_100g,
+                carbs: nutrition.carbohydrates_100g,
+                fat: nutrition.fat_100g,
+                sugar: nutrition.sugars_100g
+            });
+        }
+
+        displayProducts(productArr);
+
+    } catch (error) {
+        console.error("Category Search Error:", error);
+        displayProducts([]);
+    }
+}
+
+
+
+
+
+
+
+// ===== product details modal =====
+const productModal = document.getElementById("product-detail-modal");
+
+productsContainer.addEventListener("click", (e) => {
+    const card = e.target.closest(".product-card");
+    if (!card) return;
+
+    getProductDetails(card.dataset.barcode);
+});
+
+async function getProductDetails(barcode) {
+    const response = await fetch(`${PRODUCTS_API}/api/v2/product/${barcode}.json`);
+    if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+    }
+    const data = await response.json();
+
+    displayProductDetails(data.product, barcode);
+    productModal.classList.remove("hidden");
+}
+
+function getGradeColor(grade) {
+    if (grade === "a") return "#038141";
+    if (grade === "b") return "#85bb2f";
+    if (grade === "c") return "#fecb02";
+    if (grade === "d") return "#ee8100";
+    return "#e63e11";
+}
+
+// color of nova
+function getNovaColor(nova) {
+    if (nova == 1) return "#038141";
+    if (nova == 2) return "#85bb2f";
+    if (nova == 3) return "#ee8100";
+    return "#e63e11";
+}
+
+function displayProductDetails(product, barcode) {
+    let x = product.nutriments || {};
+
+    let name = product.product_name || "Unknown Product";
+    let brand = product.brands || "Unknown Brand";
+    let image = product.image_front_url || product.image_url || "";
+    let quantity = product.quantity || "";
+    let ingredients = product.ingredients_text || "No ingredients found";
+    let calories = Math.round(x["energy-kcal_100g"] || 0);
+    let protein = Math.round(x.proteins_100g || 0);
+    let carbs = Math.round(x.carbohydrates_100g || 0);
+    let fat = Math.round(x.fat_100g || 0);
+    let sugar = Math.round(x.sugars_100g || 0);
+    let satFat = Math.round(x["saturated-fat_100g"] || 0);
+    let fiber = Math.round(x.fiber_100g || 0);
+    let salt = Math.round(x.salt_100g || 0);
+
+
+    currentProduct = {
+    name: name,
+    image: image,
+    calories: x["energy-kcal_100g"] || 0,
+    protein: x.proteins_100g || 0,
+    carbs: x.carbohydrates_100g || 0,
+    fat: x.fat_100g || 0
+};
+
+
+    let gradeBox = "";
+    if (product.nutrition_grades) {
+        let grade = product.nutrition_grades;
+        let color = getGradeColor(grade);
+        gradeBox = `
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg" style="background-color: ${color}20">
+            <span class="w-8 h-8 rounded flex items-center justify-center text-white font-bold uppercase" style="background-color: ${color}">${grade}</span>
+            <p class="text-xs font-bold" style="color: ${color}">Nutri-Score</p>
+        </div>`;
+    }
+
+    let novaBox = "";
+    if (product.nova_group) {
+        let color = getNovaColor(product.nova_group);
+        novaBox = `
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg" style="background-color: ${color}20">
+            <span class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold" style="background-color: ${color}">${product.nova_group}</span>
+            <p class="text-xs font-bold" style="color: ${color}">NOVA</p>
+        </div>`;
+    }
+
+    let allergensBox = "";
+    let allergens = product.allergens_tags || [];
+    if (allergens.length > 0) {
+        let names = "";
+        for (let i = 0; i < allergens.length; i++) {
+            names += allergens[i].replace("en:", "") + " ";
+        }
+        allergensBox = `
+        <div class="bg-red-50 rounded-xl p-5 mb-6 border border-red-200">
+            <h3 class="font-bold text-red-700 mb-2">
+                <i class="fa-solid fa-triangle-exclamation"></i> Allergens
+            </h3>
+            <p class="text-sm text-red-600 capitalize">${names}</p>
+        </div>`;
+    }
+
+    productModal.innerHTML = `
+    <div class="bg-white rounded-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+
+            <div class="flex items-start gap-6 mb-6">
+                <div class="w-32 h-32 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
+                    <img src="${image}" alt="${name}" class="w-full h-full object-contain">
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm text-emerald-600 font-semibold mb-1">${brand}</p>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">${name}</h2>
+                    <p class="text-sm text-gray-500 mb-3">${quantity}</p>
+                    <div class="flex items-center gap-3">
+                        ${gradeBox}
+                        ${novaBox}
+                    </div>
+                </div>
+                <button class="close-product-modal text-gray-400 hover:text-gray-600">
+                    <i class="text-2xl fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="bg-emerald-50 rounded-xl p-5 mb-6 border border-emerald-200">
+                <h3 class="font-bold text-gray-900 mb-4">
+                    Nutrition Facts <span class="text-sm font-normal text-gray-500">(per 100g)</span>
+                </h3>
+                <div class="text-center mb-4 pb-4 border-b border-emerald-200">
+                    <p class="text-4xl font-bold text-gray-900">${calories}</p>
+                    <p class="text-sm text-gray-500">Calories</p>
+                </div>
+                <div class="grid grid-cols-4 gap-4 text-center">
+                    <div>
+                        <p class="text-lg font-bold text-emerald-600">${protein}g</p>
+                        <p class="text-xs text-gray-500">Protein</p>
+                    </div>
+                    <div>
+                        <p class="text-lg font-bold text-blue-600">${carbs}g</p>
+                        <p class="text-xs text-gray-500">Carbs</p>
+                    </div>
+                    <div>
+                        <p class="text-lg font-bold text-purple-600">${fat}g</p>
+                        <p class="text-xs text-gray-500">Fat</p>
+                    </div>
+                    <div>
+                        <p class="text-lg font-bold text-orange-600">${sugar}g</p>
+                        <p class="text-xs text-gray-500">Sugar</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-emerald-200 text-center">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900">${satFat}g</p>
+                        <p class="text-xs text-gray-500">Saturated Fat</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900">${fiber}g</p>
+                        <p class="text-xs text-gray-500">Fiber</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900">${salt}g</p>
+                        <p class="text-xs text-gray-500">Salt</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 rounded-xl p-5 mb-6">
+                <h3 class="font-bold text-gray-900 mb-3">Ingredients</h3>
+                <p class="text-sm text-gray-600">${ingredients}</p>
+            </div>
+
+            ${allergensBox}
+
+            <div class="flex gap-3">
+                <button class="add-product-to-log flex-1 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-all" data-barcode="${barcode}">
+                    <i class="mr-2 fa-solid fa-plus"></i> Log This Food
+                </button>
+                <button class="close-product-modal flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all">Close</button>
+            </div>
+
+        </div>
+    </div>`;
+}
+
+// close the modal (X button, Close button, or the dark background)
+productModal.addEventListener("click", (e) => {
+    if (e.target === productModal || e.target.closest(".close-product-modal")) {
+        productModal.classList.add("hidden");
+    }
+});
+
+
+
+
+// ===== log the product =====
+productModal.addEventListener("click", (e) => {
+    const addBtn = e.target.closest(".add-product-to-log");
+    if (!addBtn) return;
+    if (!currentProduct) return;
+
+    const item = {
+        id: Date.now(),
+        name: currentProduct.name,
+        image: currentProduct.image,
+        type: "Product",
+        amount: "100g",
+        servings: 1,
+        calories: Math.round(currentProduct.calories),
+        protein: Math.round(currentProduct.protein),
+        carbs: Math.round(currentProduct.carbs),
+        fat: Math.round(currentProduct.fat),
+        date: new Date().toDateString(),
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    };
+
+    const list = getFoodLog();
+    list.push(item);
+    saveFoodLog(list);
+    displayMealInLog();
+
+    productModal.classList.add("hidden");
+
+    Swal.fire({
+        title: `${item.name} has been added to your log`,
+        html: `<span style="color: green; font-size: 14px;">
+            ${item.calories} calories
+        </span>`,
+        customClass: {
+            title: "small-title"
+        },
+        icon: "success"
+    });
+});
+
+
+
+
+
+
+
+
+
+
+
+function hideLoading() {
+    loadingOverlay.style.opacity = "0";
+    setTimeout(() => {
+        loadingOverlay.style.display = "none";
+    }, 500);
 }
