@@ -58,6 +58,129 @@ let currentNutrition = null;
 let categoryArr = [];
 let areaArr = [];
 let mealsArr = [];
+let categoryScannerArr = [];
+const categoryScannerColors =  [
+  // Snacks
+  {
+    color: "bg-gradient-to-br from-orange-400 to-amber-500",
+    icon: "fa-solid fa-cookie-bite"
+  },
+  // Beverages
+  {
+    color: "bg-gradient-to-br from-cyan-400 to-blue-500",
+    icon: "fa-solid fa-glass-water"
+  },
+  // Dairy
+  {
+    color: "bg-gradient-to-br from-sky-400 to-indigo-500",
+    icon: "fa-solid fa-bottle-water"
+  },
+  // Cheeses
+  {
+    color: "bg-gradient-to-br from-yellow-400 to-amber-500",
+    icon: "fa-solid fa-cheese"
+  },
+  // Yogurts
+  {
+    color: "bg-gradient-to-br from-pink-400 to-rose-500",
+    icon: "fa-solid fa-bowl-food"
+  },
+  // Chocolates
+  {
+    color: "bg-gradient-to-br from-amber-700 to-orange-900",
+    icon: "fa-solid fa-candy-cane"
+  },
+  // Biscuits & Cookies
+  {
+    color: "bg-gradient-to-br from-orange-400 to-red-500",
+    icon: "fa-solid fa-cookie"
+  },
+  // Ice Cream
+  {
+    color: "bg-gradient-to-br from-purple-400 to-pink-500",
+    icon: "fa-solid fa-ice-cream"
+  },
+  // Breakfast Cereals
+  {
+    color: "bg-gradient-to-br from-yellow-400 to-orange-500",
+    icon: "fa-solid fa-wheat-awn"
+  },
+  // Breads
+  {
+    color: "bg-gradient-to-br from-amber-500 to-yellow-600",
+    icon: "fa-solid fa-bread-slice"
+  },
+  // Waters
+  {
+    color: "bg-gradient-to-br from-blue-400 to-cyan-500",
+    icon: "fa-solid fa-droplet"
+  },
+  // Sodas
+  {
+    color: "bg-gradient-to-br from-red-400 to-rose-600",
+    icon: "fa-solid fa-bottle-water"
+  },
+  // Coffees
+  {
+    color: "bg-gradient-to-br from-stone-500 to-amber-800",
+    icon: "fa-solid fa-mug-hot"
+  },
+  // Teas
+  {
+    color: "bg-gradient-to-br from-green-400 to-emerald-600",
+    icon: "fa-solid fa-mug-saucer"
+  },
+  // Fruits
+  {
+    color: "bg-gradient-to-br from-rose-400 to-pink-500",
+    icon: "fa-solid fa-apple-whole"
+  },
+  // Vegetables
+  {
+    color: "bg-gradient-to-br from-lime-400 to-green-600",
+    icon: "fa-solid fa-carrot"
+  },
+  // Meats
+  {
+    color: "bg-gradient-to-br from-rose-500 to-red-700",
+    icon: "fa-solid fa-drumstick-bite"
+  },
+  // Fish & Seafood
+  {
+    color: "bg-gradient-to-br from-cyan-400 to-teal-600",
+    icon: "fa-solid fa-fish"
+  },
+  // Plant-based Foods
+  {
+    color: "bg-gradient-to-br from-emerald-400 to-green-600",
+    icon: "fa-solid fa-seedling"
+  },
+  // Chips & Fries
+  {
+    color: "bg-gradient-to-br from-yellow-400 to-orange-500",
+    icon: "fa-solid fa-utensils"
+  },
+  // Sauces
+  {
+    color: "bg-gradient-to-br from-red-400 to-orange-500",
+    icon: "fa-solid fa-bottle-droplet"
+  },
+  // Spreads
+  {
+    color: "bg-gradient-to-br from-purple-400 to-fuchsia-600",
+    icon: "fa-solid fa-jar"
+  },
+  // Pasta
+  {
+    color: "bg-gradient-to-br from-orange-400 to-yellow-500",
+    icon: "fa-solid fa-bowl-rice"
+  },
+  // Desserts
+  {
+    color: "bg-gradient-to-br from-fuchsia-400 to-pink-600",
+    icon: "fa-solid fa-cake-candles"
+  }
+];
 const categoriesColors = [
     {
     color: "bg-gradient-to-br from-rose-400 to-red-500",
@@ -205,7 +328,7 @@ async function getCategories() {
     });
     const data = await response.json();
     categoryArr = data.results;
-    displayCategories(categoryArr, categoriesColors);
+    displayCategories(categoryArr,categoriesColors );
 }
 
 getCategories();
@@ -216,7 +339,7 @@ getCategories();
 function displayCategories(categories, categoryColors) {
     let box = "";
     for (let i = 0; i < 12; i++) {
-        const style = categoryColors[i] || categoryColors[0] ; // just for safety i hate colors*
+        const style = categoryColors[i] || categoryColors[0]; // just for safety i hate colors*
         box += `
         <div class="category-card ${style.background} rounded-xl p-3 border ${style.border} hover:shadow-md cursor-pointer transition-all group"
             data-category="${categories[i].name}">
@@ -949,3 +1072,28 @@ function updateLogStats() {
     renderWeekly(allItems);
 }
 
+
+// product scanner
+
+
+// get all categories in product scanner
+
+
+async function getCategoriesScanner() {
+    const response = await fetch(`${BASE_URL}/products/categories`, {
+    });
+    const data = await response.json();
+    categoryScannerArr = data.results;
+    console.log(categoryScannerArr)
+    // displayCategories(categoryArr,categoriesColors );
+}
+
+getCategoriesScanner()
+
+function displayCategoriesScanner(categoryScannerArr, categoriesColors) {
+    let box=``;
+    for(let i = 0; i < categoryScannerArr.length; i++) {
+        const style = categoryColors[i] || categoryColors[0]; // just for safety i hate colors*
+
+    }
+}
