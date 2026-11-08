@@ -72,6 +72,7 @@ const barcodeSearchInput = document.getElementById("barcode-input");
 const lookupBarcodeBtn = document.getElementById("lookup-barcode-btn");
 const nutriScoreButtons = document.querySelectorAll(".nutri-score-filter");
 const productDetailModal = document.getElementById("product-detail-modal");
+const searchProductBtn = document.getElementById("search-product-btn");
 
 
 
@@ -1183,12 +1184,12 @@ function displayProducts(productarr) {
     }
 
     for (let i = 0; i < productarr.length; i++) {
+        
 
         let product = productarr[i];
 
         let grade = product.nutritionGrade;
         let nova = product.novaGroup;
-        console.log("container:", productsContainer, "length:", productarr.length);
         box += `
             <div
                 class="product-card bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer group"
@@ -1285,6 +1286,22 @@ function displayProducts(productarr) {
     productsContainer.innerHTML = box;
 }
 
+
+// message when the page opens (nothing searched yet)
+function showStartMessage() {
+    productsContainer.innerHTML = `
+        <div class="col-span-full flex flex-col items-center justify-center py-12 text-center">
+            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <i class="fa-solid fa-barcode text-gray-400 text-2xl"></i>
+            </div>
+            <p class="text-gray-500 text-lg">No products to display</p>
+            <p class="text-gray-400 text-sm mt-2">Search by name, enter a barcode, or pick a category</p>
+        </div>
+    `;
+}
+
+showStartMessage();
+
 //search product function
 
 productSearchInput.addEventListener("input", function(e) {
@@ -1292,12 +1309,12 @@ productSearchInput.addEventListener("input", function(e) {
 });
 async function searchProduct(input) {
 
-    if (!input || !input.trim()) {
+        if (!input || !input.trim()) {
         productArr = [];
-        displayProducts(productArr);
+        showStartMessage();
         return;
     }
-
+    productsContainer.innerHTML = loadingSpinner;
     try {
         const params = new URLSearchParams({
             search_terms: input.trim(),
@@ -1348,6 +1365,7 @@ async function searchProduct(input) {
 
     } catch (error) {
         console.error("Product Search Error:", error);
+        displayProducts([]);
     }
 }
 
@@ -1363,11 +1381,12 @@ barcodeSearchInput.addEventListener("input", function(e) {
         searchProductByBarcode(barcode);
     } else {
         productArr = [];
-        displayProducts(productArr);
+        showStartMessage();
     }
 });
 
 async function searchProductByBarcode(barcode) {
+    productsContainer.innerHTML = loadingSpinner;
     try {
         const response = await fetch(
             `${PRODUCTS_API}/api/v2/product/${barcode}.json`
@@ -1409,6 +1428,7 @@ async function searchProductByBarcode(barcode) {
 
     } catch (error) {
         console.error("Barcode Search Error:", error);
+        displayProducts([]);
     }
 }
 
@@ -1437,7 +1457,7 @@ nutriScoreButtons.forEach(btn => {
 });
 
 productSearchInput.addEventListener("input", () => {
-    nutriScoreButtons.forEach(brn => btn.classList.remove("ring-2", "ring-offset-2", "ring-emerald-500"));
+    nutriScoreButtons.forEach(btn => btn.classList.remove("ring-2", "ring-offset-2", "ring-emerald-500"));
 });
 
 productCategory.addEventListener("click", (e) => {
@@ -1454,6 +1474,7 @@ productCategory.addEventListener("click", (e) => {
 });
 
 async function searchByCategory(categoryName) {
+    productsContainer.innerHTML = loadingSpinner; 
     try {
         const params = new URLSearchParams({
             action: "process",
@@ -1510,7 +1531,7 @@ async function searchByCategory(categoryName) {
 
 
 
-// ===== product details modal =====
+// product details modal 
 const productModal = document.getElementById("product-detail-modal");
 
 productsContainer.addEventListener("click", (e) => {
@@ -1747,16 +1768,16 @@ productModal.addEventListener("click", (e) => {
 
 
 
-
-
-
-
-
-
-
 function hideLoading() {
     loadingOverlay.style.opacity = "0";
     setTimeout(() => {
         loadingOverlay.style.display = "none";
     }, 500);
 }
+
+
+// Search button 
+searchProductBtn.addEventListener("click", () => {
+    searchProduct(productSearchInput.value);
+});
+
