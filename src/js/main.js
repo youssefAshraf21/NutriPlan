@@ -37,9 +37,6 @@ const ingredientsCount = document.getElementById("ingredients-count");
 const searchMeal = document.getElementById("search-input");
 const areaContainer = document.getElementById("areaContainer");
 
-const mealsLink = document.getElementById("mealsLink");
-const productScannerLink = document.getElementById("productScannerLink");
-const foodLogLink = document.getElementById("foodLogLink");
 
 const logMealBtn = document.getElementById("log-meal-btn");
 const logMealModal = document.getElementById("log-meal-modal");
@@ -71,7 +68,6 @@ const productSearchInput = document.getElementById("product-search-input");
 const barcodeSearchInput = document.getElementById("barcode-input");
 const lookupBarcodeBtn = document.getElementById("lookup-barcode-btn");
 const nutriScoreButtons = document.querySelectorAll(".nutri-score-filter");
-const productDetailModal = document.getElementById("product-detail-modal");
 const searchProductBtn = document.getElementById("search-product-btn");
 
 
@@ -308,6 +304,9 @@ foodlogDate.textContent = new Date().toLocaleDateString("en-US", {
 });
 displayMealInLog();
 
+
+
+//BOUNS
 // handel pages display
 const mealsPage = ["search-filters-section", "meal-categories-section", "all-recipes-section"];
 const detailsPage = ["meal-details"];
@@ -340,7 +339,23 @@ function setupNavigation() {
         activeLink(2);
     });
 
-    showPage(mealsPage);
+    hashPageForm();
+    window.addEventListener("hashchange", hashPageForm);
+}
+//to still show the same page when refresh & navigate with browser 
+function hashPageForm() {
+    const hash = window.location.hash;
+
+    if (hash === "#products") {
+        showPage(productsPage);
+        activeLink(1);
+    } else if (hash === "#foodlog") {
+        showPage(foodlogPage);
+        activeLink(2);
+    } else {
+        showPage(mealsPage);
+        activeLink(0);
+    }
 }
 
 // handle the active link color
