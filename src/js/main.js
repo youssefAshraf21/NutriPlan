@@ -8,7 +8,7 @@ const BASE_URL = "https://nutriplan-api.vercel.app/api"
 
 // okay now i beenig search in product to found weight  in api and i dont found i was searched for 1 hour!!! 
 //then i searched and i arrived that there a api : https://world.openfoodfacts.org/ i dont know but i dont found any way else i will use it :)
-
+// i used it for product only the ai helped me in that part only but dont i typed with my self :)) 
 
 const PRODUCTS_API = "https://world.openfoodfacts.org";
 
@@ -83,7 +83,6 @@ const loadingSpinner = `
     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
 </div>`;
 
-
 let currentMeal = null;        
 let currentNutrition = null;   
 let currentProduct = null;
@@ -92,6 +91,8 @@ let areaArr = [];
 let mealsArr = [];
 let productArr = [];
 let categoryScannerArr = [];
+
+//this i make the ai generate the colors randomly
 const categoryScannerColors =  [
   // Snacks
   {
@@ -214,6 +215,8 @@ const categoryScannerColors =  [
     icon: "fa-solid fa-cake-candles"
   }
 ];
+
+//the same as above
 const categoriesColors = [
     {
     color: "bg-gradient-to-br from-rose-400 to-red-500",
@@ -304,7 +307,6 @@ foodlogDate.textContent = new Date().toLocaleDateString("en-US", {
     weekday: "long", month: "short", day: "numeric"
 });
 displayMealInLog();
-// handel pages display
 
 // handel pages display
 const mealsPage = ["search-filters-section", "meal-categories-section", "all-recipes-section"];
@@ -360,7 +362,7 @@ async function getCategories() {
     const response = await fetch(`${BASE_URL}/meals/categories`, {
     });
     if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
+            throw new Error(`api Error ${response.status}`);
     }
     const data = await response.json();
     categoryArr = data.results;
@@ -442,7 +444,7 @@ async function getMeals() {
             }
         });
         if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
+            throw new Error(` api Error ${response.status}`);
         }
         const data = await response.json();
         mealsArr = data.results;
@@ -592,7 +594,7 @@ function displayMealDetails(meal) {
     if (meal.youtube && meal.youtube.startsWith("https://www.youtube.com/watch?v=")) {
         mealVideo.src = meal.youtube.replace("watch?v=", "embed/");
     } else {
-        mealVideo.src = "NOT FOUND";    
+        mealVideo.src = "not found sorry for that :)";    
     }
 }
 
@@ -620,7 +622,7 @@ async function getNutrition(meal) {
         
     });
         if (!response.ok) {
-                    throw new Error(`API Error: ${response.status}`);
+            throw new Error(`api error: ${response.status}`);
         }
     const data = await response.json();
     currentNutrition = data.data.perServing;   
@@ -680,7 +682,7 @@ async function searchMeals(input) {
     mealsContainer.innerHTML = loadingSpinner;
     const response = await fetch(`${BASE_URL}/meals/search?q=${input}`,)
     if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
+            throw new Error(`api error: ${response.status}`);
     }
     const data = await response.json();
     mealsArr = data.results;
@@ -702,7 +704,7 @@ async function filterByCategory(categoryName){
     mealsContainer.innerHTML = loadingSpinner;  
     const response = await fetch(`${BASE_URL}/meals/filter?category=${categoryName}&page=1&limit=25`)
     if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
+            throw new Error(`api error: ${response.status}`);
     }
     const data = await response.json();
     mealsArr = data.results;
@@ -716,7 +718,7 @@ async function filterByArea(areaName){
     mealsContainer.innerHTML = loadingSpinner;  
     const response = await fetch(`${BASE_URL}/meals/filter?area=${areaName}&page=1&limit=25`)
     if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
+            throw new Error(`api error: ${response.status}`);
     }
     const data = await response.json();
     mealsArr = data.results;
@@ -777,7 +779,7 @@ cancelLogMealBtn.addEventListener("click", () => {
     modalFat.textContent = Math.round(n.fat * servings) + "g";
 }
 
-
+// handle the servings plus and minus 0.5**
 
 document.getElementById("increase-servings").addEventListener("click", () => {
     servingsInput.value = Number(servingsInput.value) + 0.5;
@@ -1139,7 +1141,7 @@ async function getCategoriesScanner() {
     const response = await fetch(`${BASE_URL}/products/categories`, {
     });
     if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
+            throw new Error(`api error: ${response.status}`);
         }
     const data = await response.json();
     categoryScannerArr = data.results;
@@ -1304,6 +1306,8 @@ showStartMessage();
 
 //search product function
 
+// from here i used the api : https://world.openfoodfacts.org
+
 productSearchInput.addEventListener("input", function(e) {
     searchProduct(e.target.value);
 });
@@ -1328,7 +1332,7 @@ async function searchProduct(input) {
         );
 
         if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
+            throw new Error(`api error: ${response.status}`);
         }
 
         const data = await response.json();
@@ -1393,7 +1397,7 @@ async function searchProductByBarcode(barcode) {
         );
 
         if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
+            throw new Error(`api error: ${response.status}`);
         }
 
         const data = await response.json();
@@ -1488,7 +1492,7 @@ async function searchByCategory(categoryName) {
         const response = await fetch(`${PRODUCTS_API}/cgi/search.pl?${params}`);
 
         if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
+            throw new Error(`api error: ${response.status}`);
         }
 
         const data = await response.json();
@@ -1509,7 +1513,7 @@ async function searchByCategory(categoryName) {
                 quantity: product.quantity,
                 nutritionGrade: product.nutrition_grades || product.nutrition_grade_fr,
                 novaGroup: product.nova_group,
-                calories: nutrition["energy-kcal_100g"],
+                calories: nutrition["energy-kcal-100g"],
                 protein: nutrition.proteins_100g,
                 carbs: nutrition.carbohydrates_100g,
                 fat: nutrition.fat_100g,
@@ -1544,7 +1548,7 @@ productsContainer.addEventListener("click", (e) => {
 async function getProductDetails(barcode) {
     const response = await fetch(`${PRODUCTS_API}/api/v2/product/${barcode}.json`);
     if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
+        throw new Error(`api error: ${response.status}`);
     }
     const data = await response.json();
 
@@ -1715,7 +1719,7 @@ function displayProductDetails(product, barcode) {
     </div>`;
 }
 
-// close the modal (X button, Close button, or the dark background)
+// close the product modal x
 productModal.addEventListener("click", (e) => {
     if (e.target === productModal || e.target.closest(".close-product-modal")) {
         productModal.classList.add("hidden");
@@ -1725,7 +1729,7 @@ productModal.addEventListener("click", (e) => {
 
 
 
-// ===== log the product =====
+// log the product 
 productModal.addEventListener("click", (e) => {
     const addBtn = e.target.closest(".add-product-to-log");
     if (!addBtn) return;
@@ -1766,7 +1770,7 @@ productModal.addEventListener("click", (e) => {
 });
 
 
-
+// hide loading
 
 function hideLoading() {
     loadingOverlay.style.opacity = "0";
